@@ -1,5 +1,5 @@
 common:
-    lid_topic:  "/livox/lidar"
+    lid_topic:  "/lidar_1/points_livox"
 
 preprocess:
     lidar_type: 1               # Livox series LiDAR
@@ -34,3 +34,10 @@ pcd_save:
     pcd_save_en: false
     interval: -1                 # how many LiDAR frames saved in each pcd file; 
                                  # -1 : all frames will be saved in ONE pcd file, may lead to memory crash when having too much frames.
+
+initial_pose: # avia
+    position: [-0.3535533845, -0.3535533845, 0.5000000000]
+    orientation: [0.0000000000, 0.0000000000, -0.9238795042, 0.3826834261]
+
+prior_map:
+    path: "/media/jin/T7Shield/GPTR_data/sim_priormap.pcd"    

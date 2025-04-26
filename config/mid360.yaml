@@ -1,5 +1,5 @@
 common:
-    lid_topic:  "/livox/lidar"
+    lid_topic:  "/lidar_0/points_livox"
 
 preprocess:
     lidar_type: 1                # Livox
@@ -39,4 +39,11 @@ publish:
 pcd_save:
     pcd_save_en: false
     interval: -1
+
+initial_pose: # mid360
+    position: [0.0, 0.0, 0.75]
+    orientation: [-0.1464, 0.3536, 0.3536, 0.8536]
+
+prior_map:
+    path: "/media/jin/T7Shield/GPTR_data/sim_priormap.pcd"
 

@@ -969,6 +969,40 @@ void adjustCVCov()
 
 }
 
+//! jin: publish prior map
+ros::Publisher map_pub;
+sensor_msgs::PointCloud2 output_msg;
+void publishMapCloud(const PointCloudXYZI::Ptr& input_cloud) {
+    pcl::PointCloud<pcl::PointXYZI>::Ptr cloud_xyz(new pcl::PointCloud<pcl::PointXYZI>);
+    cloud_xyz->header = input_cloud->header;
+
+    cloud_xyz->points.reserve(input_cloud->points.size());
+    for (const auto& p : input_cloud->points) {
+        pcl::PointXYZI q;
+        q.x = p.x;
+        q.y = p.y;
+        q.z = p.z;
+        q.intensity = p.intensity;
+        cloud_xyz->points.push_back(q);
+    }
+
+    pcl::VoxelGrid<pcl::PointXYZI> voxel_filter;
+    voxel_filter.setInputCloud(cloud_xyz);
+
+    float voxel_size = 0.2f;
+    voxel_filter.setLeafSize(voxel_size, voxel_size, voxel_size);
+
+    pcl::PointCloud<pcl::PointXYZI>::Ptr filtered_cloud(new pcl::PointCloud<pcl::PointXYZI>);
+    voxel_filter.filter(*filtered_cloud);
+
+    pcl::toROSMsg(*filtered_cloud, output_msg);
+
+    output_msg.header.stamp = ros::Time::now();
+    output_msg.header.frame_id = "camera_init";
+    map_pub.publish(output_msg);
+}
+
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "laserMapping");
@@ -1004,7 +1038,12 @@ int main(int argc, char **argv)
     nh.param<bool>("pcd_save/pcd_save_en", pcd_save_en, false);
     nh.param<int>("pcd_save/interval", pcd_save_interval, -1);
     nh.param<double>("mapping/cov_lidar", cov_lidar, 0.001);
-
+    //! jin
+    std::vector<double> position, orientation;
+    nh.param<std::vector<double>>("initial_pose/position", position, std::vector<double>());
+    nh.param<std::vector<double>>("initial_pose/orientation", orientation, std::vector<double>());
+    std::string priormap_path;
+    nh.param<std::string>("prior_map/path", priormap_path, "prior map path");
     cout << "lidar_type: " << lidar_type << endl;
 
     path.header.stamp = ros::Time().fromSec(lidar_end_time);
@@ -1038,7 +1077,15 @@ int main(int argc, char **argv)
     H_T_H.setZero();
     I_STATE.setIdentity();
 
+    // last_state = state;
+    //! jin: initial pose
+    Eigen::Quaterniond q(orientation[3], orientation[0], orientation[1], orientation[2]);
+    q.normalize();
+    state.rot_end = q.toRotationMatrix();
+    state.pos_end = Eigen::Vector3d(position[0], position[1], position[2]);
     last_state = state;
+    std::cout << "init rot: " << state.rot_end << std::endl;
+    std::cout << "init trans: " << state.pos_end << std::endl;
 
     /*** ROS subscribe initialization ***/
     ros::Subscriber sub_pcl = p_pre->lidar_type == AVIA ? \
@@ -1058,6 +1105,23 @@ int main(int argc, char **argv)
     ros::Publisher pubPath = nh.advertise<nav_msgs::Path>
             ("/path", 100000);
 
+    //! jin: load big prior map before rosbag play to avoid callback block
+    map_pub = nh.advertise<sensor_msgs::PointCloud2>("/map_cloud", 1);
+    /*** initialize the map kdtree ***/
+    if (ikdtree.Root_Node == nullptr )
+    {
+        {
+            ikdtree.set_downsample_param(filter_size_map_min);
+            PointCloudXYZI::Ptr tmp_cloud(new PointCloudXYZI());
+            pcl::io::loadPCDFile(priormap_path, *tmp_cloud);
+            std::cout << "*************Loaded " << tmp_cloud->size() << " points." << std::endl;
+            ikdtree.Build(tmp_cloud->points);
+            publishMapCloud(tmp_cloud);
+        }
+        // continue;
+    }
+    //! jin
+
 //------------------------------------------------------------------------------------------------------
     signal(SIGINT, SigHandle);
     ros::Rate rate(5000);
@@ -1070,6 +1134,14 @@ int main(int argc, char **argv)
         if (sync_packages(Measures))
         {
             frame_id++;
+            
+            //! jin: publish prior map
+            if(frame_id <= 10){
+                output_msg.header.stamp = ros::Time::now();
+                output_msg.header.frame_id = "camera_init";
+                map_pub.publish(output_msg);
+            }
+
             if (flg_reset)
             {
                 ROS_WARN("reset when rosbag play back.");
@@ -1098,7 +1170,7 @@ int main(int argc, char **argv)
 
 
             /*** Segment the map in lidar FOV ***/
-            lasermap_fov_segment();
+            // lasermap_fov_segment();
 
 
             boost::mt19937_64 seed;
@@ -1112,20 +1184,24 @@ int main(int argc, char **argv)
             feats_points_full_size = feats_points_full.size();
 
             /*** initialize the map kdtree ***/
-            if (ikdtree.Root_Node == nullptr )
-            {
-                if (feats_points_size > 5)
-                {
-                    ikdtree.set_downsample_param(filter_size_map_min);
-                    feats_down_world->resize(feats_points_full_size);
-                    for (int i = 0; i < feats_points_full_size; i++)
-                    {
-                        feats_down_world->points[i] = point3DtoPCLPoint(feats_points_full[i], RAW);
-                    }
-                    ikdtree.Build(feats_down_world->points);
-                }
-                continue;
-            }
+            // if (ikdtree.Root_Node == nullptr )
+            // {
+            //     if (feats_points_size > 5)
+            //     {
+            //         ikdtree.set_downsample_param(filter_size_map_min);
+            //         feats_down_world->resize(feats_points_full_size);
+            //         // for (int i = 0; i < feats_points_full_size; i++)
+            //         // {
+            //         //     feats_down_world->points[i] = point3DtoPCLPoint(feats_points_full[i], RAW);
+            //         // }
+            //         // ikdtree.Build(feats_down_world->points);
+            //         PointCloudXYZI::Ptr tmp_cloud(new PointCloudXYZI());
+            //         pcl::io::loadPCDFile("/media/jin/T7Shield/GPTR_data/sim_priormap.pcd", *tmp_cloud);
+            //         std::cout << "*************Loaded " << tmp_cloud->size() << " points." << std::endl;
+            //         ikdtree.Build(tmp_cloud->points);
+            //     }
+            //     continue;
+            // }
 
             int featsFromMapNum = ikdtree.validnum();
             kdtree_size_st = ikdtree.size();
@@ -1366,8 +1442,14 @@ int main(int argc, char **argv)
             /******* Publish odometry *******/
             publish_odometry(pubOdomAftMapped);
 
+            
+            //todo jin: save poses according to your need
+
+
+
+
             /*** add the feature points to map kdtree ***/
-            map_incremental();
+            // map_incremental();
             kdtree_size_end = ikdtree.size();
 
             /******* Publish points *******/
