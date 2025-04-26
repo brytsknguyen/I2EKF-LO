@@ -1,0 +1,49 @@
+common:
+    lid_topic:  "/livox/lidar_192_168_11_125"
+
+preprocess:
+    lidar_type: 1                # Livox
+    feature_extract_en: false
+    scan_line: 6
+    blind: 1
+    point_filter_num: 3
+
+initialization:
+    cut_frame: false
+    cut_frame_num: 6
+    cut_frame_init_num: 5
+
+mapping:
+    filter_size_surf: 0.3
+    filter_size_map: 0.3
+    gyr_cov: 0.01
+    acc_cov: 0.01
+    det_range: 100.0
+    cov_lidar: 0.001
+    max_iteration: 20
+    max_undistort: 5
+    cube_side_length: 2000
+
+adaptive_cov:
+    use: false
+    K: 100.0
+    a: 50
+    b: 10.0
+
+publish:
+    path_en:  true
+    scan_publish_en:  true
+    dense_publish_en: true
+    scan_bodyframe_pub_en: false
+
+pcd_save:
+    pcd_save_en: false
+    interval: -1
+
+initial_pose:
+    position: [-1.188064217567443848e-01, -4.446469247341156006e-03, 6.206156015396118164e-01]
+    orientation: [7.068108320236206055e-01, 9.093914180994033813e-03, -7.072939872741699219e-01, 8.425739593803882599e-03]
+
+prior_map:
+    path: "/media/jin/T7Shield/GPTR_data/cathhs_iot_prior_2cm.pcd" 
+
