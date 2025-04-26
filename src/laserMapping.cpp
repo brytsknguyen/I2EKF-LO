@@ -1008,6 +1008,10 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "laserMapping");
     ros::NodeHandle nh;
 
+    string log_file = "";
+    nh.param<string>("/log_file", log_file, "");
+    printf("log_file set: %s\n", log_file.c_str());
+
     nh.param<int>("mapping/max_iteration", NUM_MAX_ITERATIONS, 10);
     nh.param<int>("mapping/max_undistort", NUM_MAX_UNDISTORT, 3);
     nh.param<bool>("adaptive_cov/use", adaptive_cov, false);
@@ -1466,6 +1470,24 @@ int main(int argc, char **argv)
         }
         status = ros::ok();
         rate.sleep();
+    }
+
+    // Save the path
+    std::ofstream os(log_file);
+    os << "# timestamp tx ty tz qx qy qz qw" << std::endl;
+
+    for(auto &pose : path.poses)
+    {
+        os << std::scientific << std::setprecision(18)
+           << pose.header.stamp.toSec() << " "
+           << pose.pose.position.x    << " "
+           << pose.pose.position.y    << " "
+           << pose.pose.position.z    << " "
+           << pose.pose.orientation.x << " "
+           << pose.pose.orientation.y << " "
+           << pose.pose.orientation.z << " "
+           << pose.pose.orientation.w << " "
+           << endl;
     }
 
     return 0;

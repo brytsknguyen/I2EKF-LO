@@ -14,8 +14,8 @@ initialization:
     cut_frame_init_num: 5
 
 mapping:
-    filter_size_surf: 0.3
-    filter_size_map: 0.3
+    filter_size_surf: 0.2
+    filter_size_map: 0.15
     gyr_cov: 0.01
     acc_cov: 0.01
     det_range: 100.0
@@ -42,8 +42,8 @@ pcd_save:
 
 initial_pose: # mid360
     position: [0.0, 0.0, 0.75]
-    orientation: [-0.1464, 0.3536, 0.3536, 0.8536]
+    orientation: [-0.1464466155, 0.3535533845, 0.3535533845, 0.8535534143]
 
 prior_map:
-    path: "/media/jin/T7Shield/GPTR_data/sim_priormap.pcd"
+    path: "/root/ros1_ws/src/gptr/scripts/sim_priormap.pcd"
 

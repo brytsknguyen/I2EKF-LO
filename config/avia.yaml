@@ -6,23 +6,29 @@ preprocess:
     feature_extract_en: false
     scan_line: 6
     blind: 2
-    point_filter_num: 2
+    point_filter_num: 3
 
 initialization:
     cut_frame: false
-    cut_frame_num: 5           # must be positive integer
+    cut_frame_num: 6           # must be positive integer
     cut_frame_init_num: 5
 
 mapping:
-    filter_size_surf: 0.05
+    filter_size_surf: 0.2
     filter_size_map: 0.15
-    gyr_cov: 50
-    acc_cov: 2
-    det_range: 450.0
+    gyr_cov: 0.01
+    acc_cov: 0.01
+    det_range: 100.0
     cov_lidar: 0.001
     max_iteration: 20
-    max_undistort: 7
+    max_undistort: 5
     cube_side_length: 2000
+
+adaptive_cov:
+    use: false
+    K: 100.0
+    a: 50
+    b: 10.0
 
 publish:
     path_en:  true
@@ -40,4 +46,4 @@ initial_pose: # avia
     orientation: [0.0000000000, 0.0000000000, -0.9238795042, 0.3826834261]
 
 prior_map:
-    path: "/media/jin/T7Shield/GPTR_data/sim_priormap.pcd"    
+    path: "/root/ros1_ws/src/gptr/scripts/sim_priormap.pcd"
