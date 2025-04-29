@@ -1,12 +1,12 @@
 <launch>
 <!-- Launch file for Livox AVIA LiDAR -->
 
-	<arg name="bag_file" default="/root/ros1_ws/src/gptr/scripts/cloud_avia_mid_w25_dynxtrz_e2.bag"/>
+	<arg name="bag_file" default="/root/ros1_ws/src/gptr/scripts/cloud_avia_mid_w25_dynxtrz_e5.bag"/>
 	<arg name="log_file" default="/root/log_i2ekf.csv"/>
 
 	<arg name="rviz" default="true" />
 
-	<rosparam command="load" file="$(find i2ekf_lo)/config/mid360.yaml" />
+	<rosparam command="load" file="$(find i2ekf_lo)/config/mid360_liosim.yaml" />
 
 	<param name="/log_file" value="$(arg log_file)"/>
 	<node pkg="i2ekf_lo" type="i2ekf_lo_mapping" name="i2ekf_lo_mapping" output="screen"/>

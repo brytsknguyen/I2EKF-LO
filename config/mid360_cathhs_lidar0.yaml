@@ -1,0 +1,49 @@
+common:
+    lid_topic:  "/livox/lidar_192_168_10_110"
+
+preprocess:
+    lidar_type: 1                # Livox
+    feature_extract_en: false
+    scan_line: 6
+    blind: 0.5
+    point_filter_num: 1
+
+initialization:
+    cut_frame: false
+    cut_frame_num: 1
+    cut_frame_init_num: 1
+
+mapping:
+    filter_size_surf: 0.2
+    filter_size_map: 0.15
+    gyr_cov: 0.01
+    acc_cov: 0.01
+    det_range: 100.0
+    cov_lidar: 0.001
+    max_iteration: 20
+    max_undistort: 5
+    cube_side_length: 100
+
+adaptive_cov:
+    use: false
+    K: 100.0
+    a: 50
+    b: 10.0
+
+publish:
+    path_en:  true
+    scan_publish_en:  true
+    dense_publish_en: true
+    scan_bodyframe_pub_en: false
+
+pcd_save:
+    pcd_save_en: false
+    interval: -1
+
+initial_pose: # mid360
+    position: [0.0, 0.0, 0.0]
+    orientation: [0, 0, 0, 1]
+
+prior_map:
+    path: "/root/ros1_ws/src/gptr/scripts/cathhs_iot_prior_2cm.pcd"
+
